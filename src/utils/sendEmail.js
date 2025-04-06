@@ -1,53 +1,31 @@
-const { SendEmailCommand } = require("@aws-sdk/client-ses");
-const { sesClient } = require("./sesClient.js");
+const nodemailer = require("nodemailer");
 
-const createSendEmailCommand = (toAddress, fromAddress, subject, body) => {
-  return new SendEmailCommand({
-    Destination: {
-      CcAddresses: [],
-      ToAddresses: [toAddress],
-    },
-    Message: {
-      Body: {
-        Html: {
-          Charset: "UTF-8",
-          Data: `<h1>${body}</h1>`,
-        },
-        Text: {
-          Charset: "UTF-8",
-          Data: "This is the text format email",
-        },
-      },
-      Subject: {
-        Charset: "UTF-8",
-        Data: subject,
-      },
-    },
-    Source: fromAddress,
-    ReplyToAddresses: [
-      /* more items */
-    ],
-  });
-};
+// Create a transporter using Gmail SMTP
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER, // Your Gmail address
+    pass: process.env.GMAIL_PASSWORD, // Your Gmail app password
+  },
+});
 
+// Function to send an email
 const run = async (subject, body, toEmailId) => {
-  const sendEmailCommand = createSendEmailCommand(
-    "akshaysaini.in@gmail.com",
-    "akshay@devtinder.in",
-    subject,
-    body
-  );
+  const mailOptions = {
+    from: process.env.GMAIL_USER, // Sender's email address
+    to: toEmailId, // Recipient's email address
+    subject: subject, // Email subject
+    html: `<h1>${body}</h1>`, // Email body in HTML format
+  };
 
   try {
-    return await sesClient.send(sendEmailCommand);
-  } catch (caught) {
-    if (caught instanceof Error && caught.name === "MessageRejected") {
-      const messageRejectedError = caught;
-      return messageRejectedError;
-    }
-    throw caught;
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: " + info.response);
+    return info;
+  } catch (error) {
+    console.error("Error sending email:", error.message);
+    throw error;
   }
 };
 
-// snippet-end:[ses.JavaScript.email.sendEmailV3]
 module.exports = { run };
