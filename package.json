@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "build": "echo 'No build process'"
+    "build": "react-scripts build"
   },
   "keywords": [
     "nodejs",
